@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Lớp 10A3 - Đỉnh Cao Ẩm Thực</title>
+    <style>
+        :root {
+            --bg-color: #f75c5d; /* Màu đỏ chủ đạo từ ảnh */
+            --pattern-color: #f97272; /* Màu caro nhạt hơn */
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Tạo nền caro bằng CSS giống phong cách của ảnh 10A3 */
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(45deg, var(--pattern-color) 25%, transparent 25%, transparent 75%, var(--pattern-color) 75%, var(--pattern-color)),
+                linear-gradient(45deg, var(--pattern-color) 25%, transparent 25%, transparent 75%, var(--pattern-color) 75%, var(--pattern-color));
+            background-size: 80px 80px;
+            background-position: 0 0, 40px 40px;
+            overflow-x: hidden;
+            /* Ẩn thanh cuộn mặc định của trình duyệt */
+            scrollbar-width: none; /* Cho Firefox */
+            -ms-overflow-style: none; /* Cho IE/Edge */
+        }
+
+        /* Ẩn thanh cuộn cho Chrome, Safari, Opera */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Khung chứa 2 ảnh */
+        .gallery-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 60px 20px;
+            max-width: 900px; /* Độ rộng tối đa của ảnh hiển thị trên web */
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Bao bọc mỗi ảnh để tạo hiệu ứng khung polaroid */
+        .image-wrapper {
+            width: 100%;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.2);
+        }
+
+        /* Class được thêm bởi JS để kích hoạt hiệu ứng trượt lên */
+        .image-wrapper.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hiệu ứng nhấc khung hình lên khi di chuột vào */
+        .image-wrapper:hover {
+            transform: scale(1.02) translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        /* Định dạng ảnh thật bên trong viền */
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 10px; /* Bo góc ảnh bên trong cho tiệp với khung viền ngoài */
+        }
+
+        /* Nút bấm chức năng */
+        .action-btn {
+            margin-top: 40px;
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--bg-color);
+            background-color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.25);
+        }
+
+        /* Dùng để ẩn các phần không cần thiết */
+        .hidden {
+            display: none !important;
+        }
+        
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Hiệu ứng pháo hoa và icon bay lơ lửng */
+        .floating-item {
+            position: fixed;
+            bottom: -50px;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 1;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+        }
+
+        .confetti {
+            position: fixed;
+            top: -20px;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            pointer-events: none;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+
+        /* --- CSS cho danh sách món ăn (Chips) --- */
+        .item-chips-container {
+            width: 100%;
+            margin-top: 15px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hint-text {
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .item-chips {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            overflow-x: auto;
+            padding: 5px 10px 10px 10px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .item-chips::-webkit-scrollbar { display: none; }
+
+        .chip-btn {
+            background: white;
+            color: var(--bg-color);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.2s, background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .chip-btn:active { transform: scale(0.95); }
+        
+        .chip-btn.info-chip {
+            background: #feca57;
+            color: #222f3e;
+        }
+
+        /* --- CSS cho Modal (Cửa sổ nổi hiển thị chi tiết) --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center;
+            z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: white; width: 85%; max-width: 400px; padding: 30px 20px;
+            border-radius: 20px; text-align: center; transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; box-shadow: 0 15px 30px rgba(0,0,0,0.3); color: #222f3e;
+        }
+        .modal.show .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 18px; font-size: 2rem; cursor: pointer; color: var(--bg-color); font-weight: bold; line-height: 1; }
+        .modal-title { font-size: 1.5rem; color: var(--bg-color); margin-bottom: 10px; }
+        .modal-desc { font-size: 1.05rem; line-height: 1.6; margin: 15px 0; color: #444; }
+        .modal-price { display: inline-block; padding: 5px 20px; background: var(--bg-color); color: white; border-radius: 50px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(247, 92, 93, 0.3); }
+
+        /* Tối ưu hiển thị cho thiết bị di động (màn hình nhỏ hơn 768px) */
+        @media (max-width: 768px) {
+            body {
+                height: 100vh;
+                overflow: hidden; /* Khóa cuộn trang hoàn toàn trên điện thoại */
+            }
+            .gallery-container {
+                height: 100vh;
+                padding: 15px 10px;
+                justify-content: center;
+            }
+            .view-section {
+                height: 100%;
+                justify-content: center;
+            }
+            .image-wrapper {
+                padding: 8px; /* Thu nhỏ viền polaroid trên điện thoại */
+                border-radius: 12px;
+                flex: 1; /* Cho phép khung ảnh co giãn chiếm toàn bộ phần trống */
+                min-height: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .image-wrapper img {
+                max-height: 100%;
+                width: auto;
+                object-fit: contain; /* Đảm bảo ảnh luôn hiển thị trọn vẹn, không bị cắt xén */
+            }
+            .item-chips-container {
+                margin-top: 10px; /* Thu hẹp khoảng cách để vừa màn hình đt */
+            }
+            .hint-text { margin-bottom: 5px; font-size: 0.85rem; }
+            .action-btn {
+                padding: 12px 25px; /* Thu nhỏ nút bấm cho vừa màn hình */
+                font-size: 1rem;
+                margin-top: 10px;
+                flex-shrink: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="gallery-container">
+        <!-- Phần Bìa (Menu 2) -->
+        <div id="coverSection" class="view-section">
+            <div class="image-wrapper">
+                <img src="menu2.jpg" alt="Bìa Menu lớp 10A3 - Hình kỷ niệm lớp">
+            </div>
+            <button id="openMenuBtn" class="action-btn">Xem menu của lớp 10A3</button>
+        </div>
+
+        <!-- Phần Menu (Menu 1 - Ẩn lúc đầu) -->
+        <div id="menuSection" class="view-section hidden">
+            <div class="image-wrapper">
+                <img src="menu1.jpg" alt="Menu lớp 10A3 - Nước Uống, Bánh Tráng, Đồ Ngọt">
+            </div>
+            
+            <!-- Danh sách món ăn có thể lướt ngang -->
+            <div class="item-chips-container">
+                <p class="hint-text">✨ Nhấn vào món bên dưới để xem chi tiết ✨</p>
+                <div class="item-chips">
+                    <button class="chip-btn info-chip" data-item="info">🌟 Thông tin gian hàng 🌟</button>
+                    <button class="chip-btn" data-item="tra-dao">🍹 Trà đào / tắc</button>
+                    <button class="chip-btn" data-item="suong-sao">🥤 Sương sáo hạt é</button>
+                    <button class="chip-btn" data-item="bt-tron">🌯 Bánh tráng trộn</button>
+                    <button class="chip-btn" data-item="bt-cuon">🌯 Bánh tráng cuộn</button>
+                    <button class="chip-btn" data-item="flan">🍮 Flan</button>
+                    <button class="chip-btn" data-item="panna">🍨 Panna cotta</button>
+                </div>
+            </div>
+
+            <button id="backBtn" class="action-btn">Quay lại ảnh bìa</button>
+        </div>
+    </main>
+
+    <!-- Cửa sổ nổi hiển thị chi tiết món ăn (Modal) -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h3 class="modal-title" id="modalTitle">Tên món</h3>
+            <p class="modal-desc" id="modalDesc">Mô tả</p>
+            <div class="modal-price" id="modalPrice">10k</div>
+        </div>
+    </div>
+
+    <script>
+        const coverSection = document.getElementById('coverSection');
+        const menuSection = document.getElementById('menuSection');
+        const openMenuBtn = document.getElementById('openMenuBtn');
+        const backBtn = document.getElementById('backBtn');
+        
+        // Khi mới vào trang, cho ảnh bìa (menu2) trượt lên mượt mà
+        setTimeout(() => {
+            coverSection.querySelector('.image-wrapper').classList.add('show');
+        }, 100);
+
+        // 1. Tạo hiệu ứng icon bay lơ lửng dưới nền
+        function createFloatingBackground() {
+            const symbols = ['❤', '✨', '🌸', '☁'];
+            for (let i = 0; i < 15; i++) {
+                let el = document.createElement('div');
+                el.className = 'floating-item';
+                el.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.animationDuration = (Math.random() * 10 + 8) + 's';
+                el.style.animationDelay = (Math.random() * 5) + 's';
+                el.style.fontSize = (Math.random() * 15 + 15) + 'px';
+                document.body.appendChild(el);
+            }
+        }
+        createFloatingBackground();
+
+        // 2. Hàm tạo pháo hoa giấy nổ (Confetti)
+        function fireConfetti() {
+            const colors = ['#ff6b6b', '#feca57', '#1dd1a1', '#5f27cd', '#ffffff'];
+            for (let i = 0; i < 70; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                conf.style.animationDelay = (Math.random() * 0.3) + 's';
+                if (Math.random() > 0.5) conf.style.borderRadius = '50%'; // Trộn lẫn pháo tròn và vuông
+                document.body.appendChild(conf);
+                
+                // Tự động dọn dẹp thẻ sau khi rơi xong
+                setTimeout(() => conf.remove(), 4000);
+            }
+        }
+
+        // Xử lý sự kiện khi bấm nút "Xem menu"
+        openMenuBtn.addEventListener('click', () => {
+            coverSection.classList.add('hidden');
+            coverSection.querySelector('.image-wrapper').classList.remove('show'); // Reset trạng thái
+            
+            menuSection.classList.remove('hidden');
+            // Delay một chút để kích hoạt lại hiệu ứng mượt mà (slide-up)
+            setTimeout(() => {
+                menuSection.querySelector('.image-wrapper').classList.add('show');
+                fireConfetti(); // Bắn pháo hoa khi menu hiện ra
+            }, 50);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Tự động kéo lên mượt mà nếu đang ở giữa trang
+        });
+
+        // Xử lý sự kiện khi bấm nút "Quay lại" (Tôi làm thêm để người xem có thể quay lại coi mặt các thành viên lớp)
+        backBtn.addEventListener('click', () => {
+            menuSection.classList.add('hidden');
+            menuSection.querySelector('.image-wrapper').classList.remove('show');
+            
+            coverSection.classList.remove('hidden');
+            setTimeout(() => {
+                coverSection.querySelector('.image-wrapper').classList.add('show');
+            }, 50);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 3. Tương tác vuốt (Swipe) trên màn hình cảm ứng điện thoại
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const modal = document.getElementById('itemModal');
+            if(modal.classList.contains('show')) return; // Không cho vuốt màn hình khi đang mở xem chi tiết món
+            const swipeThreshold = 50; // Quãng đường vuốt tối thiểu
+            if (touchStartX - touchEndX > swipeThreshold && !coverSection.classList.contains('hidden')) {
+                openMenuBtn.click(); // Vuốt trái để xem menu
+            } else if (touchEndX - touchStartX > swipeThreshold && !menuSection.classList.contains('hidden')) {
+                backBtn.click(); // Vuốt phải để quay lại ảnh bìa
+            }
+        }
+
+        // 4. Logic hiển thị Cửa sổ thông tin món ăn (Popup / Modal)
+        const itemData = {
+            'tra-dao': { title: '🍹 Trà đào / trà tắc', price: '10k', desc: 'Vị chua ngọt hài hoà, mát lạnh sảng khoái, uống một ngụm là tỉnh liền – cực hợp giải khát khi đi hội chợ 🍊🍑❄️' },
+            'suong-sao': { title: '🥤 Sương sáo hạt é', price: '10k', desc: 'Thanh mát, dễ uống, sương sáo mềm kết hợp hạt é giòn giòn – càng uống càng cuốn 🤤' },
+            'bt-tron': { title: '🌯 Bánh tráng trộn', price: '10k', desc: 'Topping đầy đủ, trộn đậm vị, cay nhẹ, thơm mùi hành phi – ăn là không muốn dừng luôn 🔥😋' },
+            'bt-cuon': { title: '🌯 Bánh tráng cuộn', price: '10k (4 cuốn)', desc: 'Cuộn gọn gàng, tiện ăn, chấm sốt me hoặc bơ muối đậm đà – ăn một cuốn là muốn ăn thêm 😆' },
+            'flan': { title: '🍮 Flan', price: '10k (2 bánh)', desc: 'Mềm mịn, béo thơm, ngọt dịu vừa phải – ăn vào là tan ngay trong miệng 😍' },
+            'panna': { title: '🍨 Panna cotta', price: '15k (2 hũ)', desc: 'Mát lạnh, béo nhẹ, kết hợp topping chua ngọt – ăn là mê từ muỗng đầu tiên ✨' },
+            'info': { title: '🌟 GIAN HÀNG NHÀ 10A3 🌟', price: 'Mại dzô, mại dzô!', desc: '💥 Giá học sinh – ăn thoải mái không lo ví 😆💸<br>💥 Làm tại chỗ – sạch sẽ – luôn tươi mới<br>💬 Không tiền mặt? Quét QR thanh toán liền nha 😎<br>📍 Địa điểm: Trường THPT Phan Chu Trinh<br>👉 Ghé một lần là nhớ, hai lần là thành khách quen 😝🔥' }
+        };
+
+        const modal = document.getElementById('itemModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalPrice = document.getElementById('modalPrice');
+
+        // Thêm sự kiện bấm vào từng món ăn
+        document.querySelectorAll('.chip-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const data = itemData[btn.dataset.item];
+                if(data) {
+                    modalTitle.innerHTML = data.title;
+                    modalDesc.innerHTML = data.desc; // InnerHTML để chạy được thẻ <br> xuống dòng
+                    modalPrice.innerHTML = data.price;
+                    modal.classList.add('show');
+                }
+            });
+        });
+
+        // Đóng cửa sổ nổi
+        document.getElementById('closeModal').addEventListener('click', () => {
+            modal.classList.remove('show');
+        });
+
+        // Nhấn ra ngoài khoảng đen cũng tự đóng
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) modal.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
